@@ -352,7 +352,7 @@ def print_files(path, leak_word, c_word, naming_rule, part, cn_sub, json_data, f
             else:
                 print("  <title>" + naming_rule + "</title>", file=code)
                 print("  <originaltitle>" + json_data['original_naming_rule'] + "</originaltitle>", file=code)
-                print("  <sorttitle>" + naming_rule + "</sorttitle>", file=code)    
+                print("  <sorttitle>" + naming_rule + "</sorttitle>", file=code)
             print("  <customrating>JP-18+</customrating>", file=code)
             print("  <mpaa>JP-18+</mpaa>", file=code)
             try:
@@ -386,7 +386,7 @@ def print_files(path, leak_word, c_word, naming_rule, part, cn_sub, json_data, f
                 pass
             print("  <maker>" + studio + "</maker>", file=code)
             print("  <label>" + label + "</label>", file=code)
-            
+
             jellyfin = config.getInstance().jellyfin()
             if not jellyfin:
                 if config.getInstance().actor_only_tag():
@@ -576,11 +576,11 @@ def add_to_pic(pic_path, img_pic, size, count, mode):
 # ========================结束=================================
 
 
-def paste_file_to_folder(filepath, path, multi_part, number, part, leak_word, c_word, hack_word):  # 文件路径，番号，后缀，要移动至的位置
+def paste_file_to_folder(filepath, path, multi_part, number, part, leak_word, c_word, hack_word, _4k):  # 文件路径，番号，后缀，要移动至的位置
     filepath_obj = pathlib.Path(filepath)
     houzhui = filepath_obj.suffix
     try:
-        targetpath = os.path.join(path, f"{number}{leak_word}{c_word}{hack_word}{houzhui}")
+        targetpath = os.path.join(path, f"{number}{leak_word}{c_word}{hack_word}{'-4K' if _4k else ''}{houzhui}")
         # 任何情况下都不要覆盖，以免遭遇数据源或者引擎错误导致所有文件得到同一个number，逐一
         # 同名覆盖致使全部文件损失且不可追回的最坏情况
         if os.path.exists(targetpath):
@@ -620,12 +620,12 @@ def paste_file_to_folder(filepath, path, multi_part, number, part, leak_word, c_
 
 
 def paste_file_to_folder_mode2(filepath, path, multi_part, number, part, leak_word, c_word,
-                               hack_word):  # 文件路径，番号，后缀，要移动至的位置
+                               hack_word, _4k):  # 文件路径，番号，后缀，要移动至的位置
     if multi_part == 1:
         number += part  # 这时number会被附加上CD1后缀
     filepath_obj = pathlib.Path(filepath)
     houzhui = filepath_obj.suffix
-    targetpath = os.path.join(path, f"{number}{part}{leak_word}{c_word}{hack_word}{houzhui}")
+    targetpath = os.path.join(path, f"{number}{part}{leak_word}{c_word}{hack_word}{'-4K' if _4k else ''}{houzhui}")
     if os.path.exists(targetpath):
         raise FileExistsError('File Exists on destination path, we will never overwriting.')
     try:
@@ -782,7 +782,7 @@ def core_main_no_net_op(movie_path, number):
         linkImage(path, number, part, leak_word, c_word, hack_word, ext)
 
 
-def move_subtitles(filepath, path, multi_part, number, part, leak_word, c_word, hack_word) -> bool:
+def move_subtitles(filepath, path, multi_part, number, part, leak_word, c_word, hack_word, _4k) -> bool:
     filepath_obj = pathlib.Path(filepath)
     link_mode = config.getInstance().link_mode()
     sub_res = config.getInstance().sub_rule()
@@ -793,7 +793,7 @@ def move_subtitles(filepath, path, multi_part, number, part, leak_word, c_word, 
                 continue
             if filepath_obj.stem.split('.')[0].lower() != subfile.stem.split('.')[0].lower():
                 continue
-            sub_targetpath = Path(path) / f"{number}{leak_word}{c_word}{hack_word}{''.join(subfile.suffixes)}"
+            sub_targetpath = Path(path) / f"{number}{leak_word}{c_word}{hack_word}{'-4K' if _4k else ''}{''.join(subfile.suffixes)}"
             if link_mode not in (1, 2):
                 shutil.move(str(subfile), str(sub_targetpath))
                 print(f"[+]Sub Moved!        {sub_targetpath.name}")
@@ -852,16 +852,17 @@ def core_main(movie_path, number_th, oCC, specified_source=None, specified_url=N
     unce = json_data.get('无码')
     uncensored = int(unce) if isinstance(unce, bool) else int(is_uncensored(number))
 
-    if '流出' in movie_path or 'uncensored' in movie_path.lower():
+    if '流出' in movie_path or 'leak' in movie_path.lower():
         liuchu = '流出'
         leak = True
         leak_word = '-无码流出'  # 流出影片后缀
     else:
         leak = False
 
-    if 'hack'.upper() in str(movie_path).upper() or '破解' in movie_path:
+    if 'hack'.upper() in str(movie_path).upper() or '破解' in movie_path or \
+        'uncensored' in movie_path or '-U' in movie_path:
         hack = True
-        hack_word = "-hack"
+        hack_word = "-破解"
 
     if '4k'.upper() in str(movie_path).upper() or '4k' in movie_path:
         _4k = True
@@ -895,9 +896,9 @@ def core_main(movie_path, number_th, oCC, specified_source=None, specified_url=N
     poster_path = f"poster{ext}"
     thumb_path = f"thumb{ext}"
     if config.getInstance().image_naming_with_number():
-        fanart_path = f"{number}{leak_word}{c_word}{hack_word}-fanart{ext}"
-        poster_path = f"{number}{leak_word}{c_word}{hack_word}-poster{ext}"
-        thumb_path = f"{number}{leak_word}{c_word}{hack_word}-thumb{ext}"
+        fanart_path = f"{number}{leak_word}{c_word}{hack_word}{'-4K' if _4k else ''}-fanart{ext}"
+        poster_path = f"{number}{leak_word}{c_word}{hack_word}{'-4K' if _4k else ''}-poster{ext}"
+        thumb_path = f"{number}{leak_word}{c_word}{hack_word}{'-4K' if _4k else ''}-thumb{ext}"
 
     # main_mode
     #  1: 刮削模式 / Scraping mode
@@ -949,10 +950,10 @@ def core_main(movie_path, number_th, oCC, specified_source=None, specified_url=N
             linkImage(path, number_th, part, leak_word, c_word, hack_word, ext)
 
         # 移动电影
-        paste_file_to_folder(movie_path, path, multi_part, number, part, leak_word, c_word, hack_word)
+        paste_file_to_folder(movie_path, path, multi_part, number, part, leak_word, c_word, hack_word, _4k)
 
         # Move subtitles
-        move_status = move_subtitles(movie_path, path, multi_part, number, part, leak_word, c_word, hack_word)
+        move_status = move_subtitles(movie_path, path, multi_part, number, part, leak_word, c_word, hack_word, _4k)
         if move_status:
             cn_sub = True
         # 添加水印
@@ -969,10 +970,10 @@ def core_main(movie_path, number_th, oCC, specified_source=None, specified_url=N
         # 创建文件夹
         path = create_folder(json_data)
         # 移动文件
-        paste_file_to_folder_mode2(movie_path, path, multi_part, number, part, leak_word, c_word, hack_word)
+        paste_file_to_folder_mode2(movie_path, path, multi_part, number, part, leak_word, c_word, hack_word, _4k)
 
         # Move subtitles
-        move_subtitles(movie_path, path, multi_part, number, part, leak_word, c_word, hack_word)
+        move_subtitles(movie_path, path, multi_part, number, part, leak_word, c_word, hack_word, _4k)
 
     elif conf.main_mode() == 3:
         path = str(Path(movie_path).parent)
