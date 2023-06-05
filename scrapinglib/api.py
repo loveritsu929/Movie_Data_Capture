@@ -34,7 +34,7 @@ class Scraping:
     """
     adult_full_sources = ['javlibrary', 'javdb', 'javbus', 'airav', 'fanza', 'xcity', 'jav321',
                           'mgstage', 'fc2', 'avsox', 'dlsite', 'carib', 'madou',
-                          'getchu', 'gcolle', 'javday', 'pissplay', 'javmenu'
+                          'getchu', 'gcolle', 'javday', 'pissplay', 'javmenu', 'pcolle', 'caribpr'
                           ]
 
     general_full_sources = ['tmdb', 'imdb']
@@ -149,23 +149,16 @@ class Scraping:
         # javdb的封面有水印，如果可以用其他源的封面来替换javdb的封面
         if 'source' in json_data and json_data['source'] == 'javdb':
             # search other sources
-            other_sources = sources[sources.index('javdb') + 1:]
-            while other_sources:
-                # If cover not found in other source, then skip using other sources using javdb cover instead
-                try:
-                    other_json_data = self.searchAdult(number, other_sources)
-                    if other_json_data is not None and 'cover' in other_json_data and other_json_data['cover'] != '':
-                        json_data['cover'] = other_json_data['cover']
-                        if self.debug:
-                            print(f"[+]Find movie [{number}] cover on website '{other_json_data['cover']}'")
-                        break
-                    # 当不知道source为何时，只能停止搜索
-                    if 'source' not in other_json_data:
-                        break
-                    # check other sources
-                    other_sources = sources[sources.index(other_json_data['source']) + 1:]
-                except:
-                    pass
+            # If cover not found in other source, then skip using other sources using javdb cover instead
+            try:
+                other_sources = sources[sources.index('javdb') + 1:]
+                other_json_data = self.searchAdult(number, other_sources)
+                if other_json_data is not None and 'cover' in other_json_data and other_json_data['cover'] != '':
+                    json_data['cover'] = other_json_data['cover']
+                    if self.debug:
+                        print(f"[+]Find movie [{number}] cover on website '{other_json_data['cover']}'")
+            except:
+                pass
 
         # Return if data not found in all sources
         if not json_data or json_data['title'] == "":
@@ -216,12 +209,17 @@ class Scraping:
             if "carib" in sources and (re.search(r"^\d{6}-\d{3}", file_number)
             ):
                 sources = insert(sources, "carib")
+            elif "caribpr" in sources and (re.search(r"^\d{6}-\d{3}", file_number)
+            ):
+                sources = insert(sources, "caribpr")
             elif "item" in file_number or "GETCHU" in file_number.upper():
                 sources = insert(sources, "getchu")
             elif "rj" in lo_file_number or "vj" in lo_file_number or re.search(r"[\u3040-\u309F\u30A0-\u30FF]+",
                                                                                file_number):
                 sources = insert(sources, "getchu")
                 sources = insert(sources, "dlsite")
+            elif "pcolle" in sources and "pcolle" in lo_file_number:
+                sources = insert(sources, "pcolle")
             elif "fc2" in lo_file_number:
                 if "fc2" in sources:
                     sources = insert(sources, "fc2")
