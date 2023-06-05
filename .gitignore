@@ -1,3 +1,4 @@
+temp_output/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -112,3 +113,4 @@ failed/*
 .vscode/launch.json
 
 .idea
+config.ini
